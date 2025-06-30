@@ -1,48 +1,35 @@
 import React from "react";
 
 /**
- * card对象示例：{ suit: "spades", rank: "ace" }
- * 图片应放在 public/cards/ 下
+ * @param {string} rank
+ * @param {string} suit
+ * @param {object} style
  */
-export default function Card({ suit, rank }) {
-  // rank英文映射
-  const rankMap = {
-    'A': 'ace',
-    '2': '2',
-    '3': '3',
-    '4': '4',
-    '5': '5',
-    '6': '6',
-    '7': '7',
-    '8': '8',
-    '9': '9',
-    '10': '10',
-    'J': 'jack',
-    'Q': 'queen',
-    'K': 'king'
-  };
-
-  // suit英文映射
-  const suitMap = {
-    'spades': 'spades',
-    'hearts': 'hearts',
-    'diamonds': 'diamonds',
-    'clubs': 'clubs',
-    '黑桃': 'spades',
-    '红桃': 'hearts',
-    '方块': 'diamonds',
-    '梅花': 'clubs'
-  };
-
-  // 获取图片文件名
-  const imgName = `${rankMap[rank] || rank}_of_${suitMap[suit] || suit}.svg`;
+export default function Card({ rank, suit, style = {} }) {
+  if (suit === "joker") {
+    // 大小王图片命名兼容
+    const imgName = rank === "big" ? "red_joker.svg" : "black_joker.svg";
+    const imgSrc = `/cards/${imgName}`;
+    return (
+      <img
+        src={imgSrc}
+        alt={rank === "big" ? "大王" : "小王"}
+        title={rank === "big" ? "大王" : "小王"}
+        style={{ width: 60, height: 90, ...style }}
+        draggable={false}
+      />
+    );
+  }
+  const rankMap = { A: "ace", J: "jack", Q: "queen", K: "king" };
+  const imgName = `${rankMap[rank] || rank}_of_${suit}.svg`;
   const imgSrc = `/cards/${imgName}`;
-
   return (
     <img
       src={imgSrc}
-      alt={`${rank} of ${suit}`}
-      style={{ width: "70px", height: "100px" }}
+      alt={`${suit}${rank}`}
+      title={`${suit}${rank}`}
+      style={{ width: 60, height: 90, ...style }}
+      draggable={false}
     />
   );
 }
