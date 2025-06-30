@@ -3,15 +3,113 @@ import Card from "./Card";
 import PlayerHand from "./PlayerHand";
 import { shuffleAndDeal } from "../utils/pokerUtils";
 
-const COUNTDOWN_TIME = 15; // 每回合倒计时
-const GRAB_TIME = 8; // 抢地主倒计时
+// 响应式布局样式
+const styles = {
+  container: {
+    position: "relative",
+    width: "100vw",
+    minHeight: "100vh",
+    background: "#f5f5f5",
+    overflow: "hidden",
+    fontSize: "16px",
+  },
+  topBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    padding: "8px 0 2px 0",
+    background: "#fff",
+    borderBottom: "1px solid #eee",
+    textAlign: "center",
+    zIndex: 2,
+  },
+  player: (pos) => ({
+    position: "absolute",
+    top: "48px",
+    left: pos === "left" ? "2vw" : undefined,
+    right: pos === "right" ? "2vw" : undefined,
+    width: "36vw",
+    maxWidth: 180,
+    padding: 2,
+    textAlign: "center",
+    zIndex: 1,
+    background: "rgba(255,255,255,0.85)",
+    borderRadius: 8,
+    fontSize: "15px",
+  }),
+  myHandArea: {
+    position: "absolute",
+    left: "0",
+    right: "0",
+    bottom: "12vw",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    zIndex: 2,
+  },
+  myHandInner: {
+    display: "flex",
+    flexDirection: "row",
+    gap: "7px",
+    flexWrap: "nowrap",
+    overflowX: "auto",
+    padding: "2vw 2vw 0 2vw",
+    maxWidth: "100vw",
+  },
+  myBtnArea: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: "4vw",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: "18vw",
+    zIndex: 3,
+  },
+  btn: {
+    fontSize: "18px",
+    padding: "7px 20px",
+    borderRadius: 10,
+    border: "none",
+    background: "#4e7cff",
+    color: "#fff",
+    margin: 2,
+    minWidth: "80px",
+    minHeight: "38px",
+  },
+  smallBtn: {
+    fontSize: "15px",
+    padding: "3px 14px",
+    borderRadius: 7,
+    border: "none",
+    background: "#4e7cff",
+    color: "#fff",
+    margin: 2,
+    minWidth: "54px",
+    minHeight: "28px",
+  },
+  playedCards: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "2px",
+    marginTop: 2,
+    minHeight: 30,
+  },
+  playedCardImg: {
+    width: 18, height: 27,
+  }
+};
+
+const COUNTDOWN_TIME = 15;
+const GRAB_TIME = 8;
 
 function getNextPlayer(cur) {
   return (cur + 1) % 3;
 }
 
 export default function GameTable({ roomId, playerId, onExit }) {
-  // 牌局状态
   const [phase, setPhase] = useState("dealing");
   const [hands, setHands] = useState([[], [], []]);
   const [bottom, setBottom] = useState([]);
@@ -30,9 +128,7 @@ export default function GameTable({ roomId, playerId, onExit }) {
   const [scores, setScores] = useState([0, 0, 0]);
   const [gameResult, setGameResult] = useState("");
 
-  // 你是哪个玩家
   const myIdx = parseInt(playerId, 10) || 0;
-  // 其他两家在左上和右上
   const leftIdx = (myIdx + 1) % 3;
   const rightIdx = (myIdx + 2) % 3;
 
@@ -161,7 +257,6 @@ export default function GameTable({ roomId, playerId, onExit }) {
     }
     let newPassCount = passCount + 1;
     if (newPassCount === 2) {
-      // 两家都pass，重置上一手
       setLastPlayed([]);
       setLastPlayedPlayer(null);
       setPassCount(0);
@@ -176,118 +271,156 @@ export default function GameTable({ roomId, playerId, onExit }) {
     setPhase("dealing");
   }
 
-  // 渲染其余玩家（只显示剩余牌数）
-  function renderOtherPlayer(idx, position) {
+  function renderOtherPlayer(idx, pos) {
     return (
-      <div style={{
-        position: "absolute",
-        left: position === "left" ? 12 : undefined,
-        right: position === "right" ? 12 : undefined,
-        top: 12,
-        textAlign: "center"
-      }}>
+      <div style={styles.player(pos)}>
         <div>
           玩家{idx + 1}{landlord === idx ? "(地主)" : ""}{currentPlayer === idx ? "（出牌中）" : ""}
         </div>
         <div>剩余：{hands[idx].length} 张</div>
-        <div>
-          已出牌：
-          {playedCards[idx].map((card, i) => (
-            <span key={i}><Card rank={card.rank} suit={card.suit} style={{ width: 18, height: 27 }} /></span>
+        <div style={styles.playedCards}>
+          {playedCards[idx].slice(-5).map((card, i) => (
+            <Card key={i} rank={card.rank} suit={card.suit} style={styles.playedCardImg} />
           ))}
         </div>
       </div>
     );
   }
 
-  // 渲染自己（底部中间）
   function renderMyHand() {
     return (
-      <div style={{
-        position: "absolute",
-        left: "50%",
-        bottom: 8,
-        transform: "translateX(-50%)",
-        textAlign: "center"
-      }}>
-        <div>玩家{myIdx + 1}{landlord === myIdx ? "(地主)" : ""} (你)</div>
-        <PlayerHand
-          cards={hands[myIdx]}
-          selected={selected}
-          onSelect={phase === "playing" && currentPlayer === myIdx ? (i =>
-            setSelected(prev =>
-              prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
-            )
-          ) : () => {}}
-          onPlay={phase === "playing" && currentPlayer === myIdx ? handlePlay : () => {}}
-          canPlay={phase === "playing" && currentPlayer === myIdx}
-          onPass={phase === "playing" && currentPlayer === myIdx ? handlePass : undefined}
-        />
-        <div>
-          已出牌：
-          {playedCards[myIdx].map((card, i) => (
-            <span key={i}><Card rank={card.rank} suit={card.suit} style={{ width: 18, height: 27 }} /></span>
+      <div style={styles.myHandArea}>
+        <div style={styles.myHandInner}>
+          {hands[myIdx].map((card, idx) => (
+            <div
+              key={idx}
+              style={{
+                border: selected.includes(idx) ? "2px solid #f00" : "2px solid transparent",
+                borderRadius: 8,
+                background: "#fff",
+              }}
+              onClick={phase === "playing" && currentPlayer === myIdx
+                ? () =>
+                    setSelected((prev) =>
+                      prev.includes(idx)
+                        ? prev.filter((i) => i !== idx)
+                        : [...prev, idx]
+                    )
+                : undefined}
+            >
+              <Card rank={card.rank} suit={card.suit} />
+            </div>
           ))}
         </div>
       </div>
     );
+  }
+
+  function renderMyBtnArea() {
+    // 仅自己出牌时显示
+    if (
+      (phase === "playing" && currentPlayer === myIdx) ||
+      (phase === "grabbing" && currentPlayer === myIdx)
+    ) {
+      return (
+        <div style={styles.myBtnArea}>
+          {phase === "grabbing" ? (
+            <>
+              <button style={styles.btn} onClick={() => handleGrab("grab")}>
+                抢地主
+              </button>
+              <button style={styles.btn} onClick={() => handleGrab("pass")}>
+                不抢
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                style={styles.btn}
+                onClick={handlePlay}
+                disabled={selected.length === 0}
+              >
+                出牌
+              </button>
+              <button style={styles.btn} onClick={handlePass}>
+                不出
+              </button>
+            </>
+          )}
+        </div>
+      );
+    }
+    return null;
   }
 
   return (
-    <div style={{ position: "relative", width: "100%", minHeight: 440, margin: "0 auto" }}>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 0, textAlign: "center" }}>
+    <div style={styles.container}>
+      {/* 顶部栏 */}
+      <div style={styles.topBar}>
         <div>
-          房间号：{roomId}　<button onClick={onExit}>退出房间</button>
+          房间号：{roomId}&nbsp;
+          <button style={styles.smallBtn} onClick={onExit}>退出</button>
         </div>
-        <div>记分：{scores.map((s, i) => (
-          <span key={i} style={{ marginRight: 12 }}>
-            玩家{i + 1}{landlord === i ? "(地主)" : ""}：{s}
-          </span>
-        ))}</div>
+        <div>
+          记分：
+          {scores.map((s, i) => (
+            <span key={i} style={{ marginRight: 8 }}>
+              玩家{i + 1}
+              {landlord === i ? "(地主)" : ""}
+              ：{s}
+            </span>
+          ))}
+        </div>
+        <div>
+          {phase === "grabbing" && (
+            <>
+              <b>抢地主阶段</b> 当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
+            </>
+          )}
+          {phase === "playing" && (
+            <>
+              <b>出牌阶段</b> 地主：玩家{landlord + 1} 底牌：
+              {bottom.map((c, i) => (
+                <Card key={i} rank={c.rank} suit={c.suit} style={styles.playedCardImg} />
+              ))}
+              当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
+            </>
+          )}
+          {phase === "end" && (
+            <>
+              <b>本局结束！{gameResult}</b>
+              <button style={styles.smallBtn} onClick={handleRestart}>再来一局</button>
+            </>
+          )}
+        </div>
         {phase === "grabbing" && (
           <div>
-            <h3>抢地主阶段</h3>
-            <div>当前轮到：玩家{currentPlayer + 1}</div>
-            <div>倒计时：{countdown}s</div>
-            {myIdx === currentPlayer && (
-              <div>
-                <button onClick={() => handleGrab("grab")}>抢地主</button>
-                <button onClick={() => handleGrab("pass")}>不抢</button>
-              </div>
-            )}
-            <div>
-              抢地主记录：{grabRecords.map((rec, i) =>
-                <span key={i}>玩家{rec.player + 1}{rec.action === "grab" ? "抢" : "不抢"}　</span>
-              )}
-            </div>
+            抢地主记录：
+            {grabRecords.map((rec, i) => (
+              <span key={i}>
+                玩家{rec.player + 1}
+                {rec.action === "grab" ? "抢" : "不抢"}　
+              </span>
+            ))}
           </div>
         )}
         {phase === "playing" && (
           <div>
-            <h3>出牌阶段</h3>
-            <div>地主：玩家{landlord + 1}　底牌：
-              {bottom.map((c, i) => <Card key={i} rank={c.rank} suit={c.suit} style={{ width: 18, height: 27 }} />)}
-            </div>
-            <div>当前出牌：玩家{currentPlayer + 1}　倒计时：{countdown}s</div>
-            <div>上家出的牌：
-              {lastPlayed.map((c, i) => <Card key={i} rank={c.rank} suit={c.suit} style={{ width: 18, height: 27 }} />)}
-            </div>
-          </div>
-        )}
-        {phase === "end" && (
-          <div>
-            <h2>本局结束！{gameResult}</h2>
-            <button onClick={handleRestart}>再来一局</button>
+            上家出的牌：
+            {lastPlayed.map((c, i) => (
+              <Card key={i} rank={c.rank} suit={c.suit} style={styles.playedCardImg} />
+            ))}
           </div>
         )}
       </div>
-
       {/* 左上角玩家 */}
       {renderOtherPlayer(leftIdx, "left")}
       {/* 右上角玩家 */}
       {renderOtherPlayer(rightIdx, "right")}
       {/* 底部自己 */}
       {renderMyHand()}
+      {/* 底部按钮 */}
+      {renderMyBtnArea()}
     </div>
   );
 }
