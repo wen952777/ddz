@@ -3,107 +3,157 @@ import Card from "./Card";
 import PlayerHand from "./PlayerHand";
 import { shuffleAndDeal } from "../utils/pokerUtils";
 
-// 响应式布局样式
+// 响应式+旋转牌桌+椭圆形深绿色桌面
 const styles = {
-  container: {
-    position: "relative",
-    width: "100vw",
+  root: {
+    position: "fixed",
+    inset: 0,
+    background: "#224422",
+    zIndex: 0,
     minHeight: "100vh",
-    background: "#f5f5f5",
-    overflow: "hidden",
-    fontSize: "16px",
+    minWidth: "100vw",
   },
-  topBar: {
+  tableWrap: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    padding: "8px 0 2px 0",
-    background: "#fff",
-    borderBottom: "1px solid #eee",
-    textAlign: "center",
-    zIndex: 2,
-  },
-  player: (pos) => ({
-    position: "absolute",
-    top: "48px",
-    left: pos === "left" ? "2vw" : undefined,
-    right: pos === "right" ? "2vw" : undefined,
-    width: "36vw",
-    maxWidth: 180,
-    padding: 2,
-    textAlign: "center",
+    left: "50%",
+    top: "50%",
+    width: "96vw",
+    height: "70vw",
+    maxWidth: "650px",
+    maxHeight: "470px",
+    minWidth: "330px",
+    minHeight: "240px",
+    transform: "translate(-50%,-50%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 1,
-    background: "rgba(255,255,255,0.85)",
-    borderRadius: 8,
-    fontSize: "15px",
-  }),
-  myHandArea: {
-    position: "absolute",
-    left: "0",
-    right: "0",
-    bottom: "12vw",
+    transition: "all 0.3s"
+  },
+  table: {
+    width: "100%",
+    height: "100%",
+    background: "radial-gradient(ellipse at center, #278a4e 70%, #154a26 120%)",
+    border: "8px solid #145020",
+    borderRadius: "50% / 45%",
+    boxShadow: "0 0 35px 6px #0a351b",
+    position: "relative",
+    overflow: "visible",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  player: (pos, isLandlord, isCurrent) => {
+    const common = {
+      position: "absolute",
+      color: "#fff",
+      fontWeight: isLandlord ? "bold" : undefined,
+      background: "rgba(0,0,0,0.18)",
+      padding: "6px 14px",
+      borderRadius: 12,
+      border: isCurrent ? "2px solid #ff0" : "2px solid #fff1",
+      minWidth: 72,
+      textAlign: "center",
+      zIndex: 2,
+      fontSize: "15px"
+    };
+    if (pos === "left") return { ...common, left: "-25px", top: "54px" };
+    if (pos === "right") return { ...common, right: "-25px", top: "54px" };
+    if (pos === "top") return { ...common, left: "50%", top: "-28px", transform: "translateX(-50%)" };
+    if (pos === "bottom") return { ...common, left: "50%", bottom: "-12px", transform: "translateX(-50%)" };
+    return common;
+  },
+  playedCards: {
+    marginTop: 2,
+    marginBottom: 0,
     display: "flex",
     justifyContent: "center",
-    alignItems: "flex-end",
-    zIndex: 2,
+    gap: "3px",
+    minHeight: 26,
   },
-  myHandInner: {
+  playedCardImg: {
+    width: 18, height: 27,
+  },
+  myHandArea: {
+    position: "absolute",
+    left: "50%",
+    bottom: "-80px",
+    transform: "translateX(-50%)",
     display: "flex",
     flexDirection: "row",
     gap: "7px",
     flexWrap: "nowrap",
     overflowX: "auto",
-    padding: "2vw 2vw 0 2vw",
-    maxWidth: "100vw",
+    background: "rgba(20,40,18,0.10)",
+    borderRadius: 8,
+    padding: "6px 10px",
+    zIndex: 2,
+    minWidth: "200px",
+    maxWidth: "95vw"
   },
   myBtnArea: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: "4vw",
+    left: "50%",
+    bottom: "-135px",
+    transform: "translateX(-50%)",
     display: "flex",
     flexDirection: "row",
-    justifyContent: "center",
-    gap: "18vw",
+    gap: "16vw",
     zIndex: 3,
   },
   btn: {
-    fontSize: "18px",
-    padding: "7px 20px",
-    borderRadius: 10,
+    fontSize: "19px",
+    padding: "9px 22px",
+    borderRadius: 9,
     border: "none",
-    background: "#4e7cff",
-    color: "#fff",
+    background: "#f6c544",
+    color: "#124018",
     margin: 2,
-    minWidth: "80px",
+    minWidth: "90px",
     minHeight: "38px",
+    boxShadow: "0 2px 7px #0005"
   },
   smallBtn: {
     fontSize: "15px",
-    padding: "3px 14px",
+    padding: "2px 14px",
     borderRadius: 7,
     border: "none",
-    background: "#4e7cff",
+    background: "#53c0a8",
     color: "#fff",
     margin: 2,
-    minWidth: "54px",
+    minWidth: "52px",
     minHeight: "28px",
   },
-  playedCards: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "2px",
-    marginTop: 2,
-    minHeight: 30,
+  topBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: "16px",
+    zIndex: 10,
+    background: "rgba(0,0,0,0.25)",
+    padding: "8px 0 2px 0"
   },
-  playedCardImg: {
-    width: 18, height: 27,
+  // 横屏模式整体包裹
+  rotate: {
+    position: "fixed",
+    left: 0, top: 0, right: 0, bottom: 0,
+    width: "100vw", height: "100vh",
+    transform: "rotate(90deg)",
+    transformOrigin: "center center",
+    background: "#224422",
+    zIndex: 100,
+    overflow: "hidden"
   }
 };
 
 const COUNTDOWN_TIME = 15;
 const GRAB_TIME = 8;
+
+// 横屏切换阈值
+const ROTATE_THRESHOLD = 520;
 
 function getNextPlayer(cur) {
   return (cur + 1) % 3;
@@ -127,10 +177,20 @@ export default function GameTable({ roomId, playerId, onExit }) {
   const timer = useRef();
   const [scores, setScores] = useState([0, 0, 0]);
   const [gameResult, setGameResult] = useState("");
+  const [rotate, setRotate] = useState(window.innerWidth < ROTATE_THRESHOLD);
 
   const myIdx = parseInt(playerId, 10) || 0;
   const leftIdx = (myIdx + 1) % 3;
   const rightIdx = (myIdx + 2) % 3;
+
+  // 旋转检测
+  useEffect(() => {
+    function onResize() {
+      setRotate(window.innerWidth < ROTATE_THRESHOLD || window.innerHeight < 350);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // 发牌
   useEffect(() => {
@@ -273,9 +333,11 @@ export default function GameTable({ roomId, playerId, onExit }) {
 
   function renderOtherPlayer(idx, pos) {
     return (
-      <div style={styles.player(pos)}>
+      <div style={styles.player(pos, landlord === idx, currentPlayer === idx)}>
         <div>
-          玩家{idx + 1}{landlord === idx ? "(地主)" : ""}{currentPlayer === idx ? "（出牌中）" : ""}
+          玩家{idx + 1}
+          {landlord === idx ? "【地主】" : ""}
+          {currentPlayer === idx ? "（出牌中）" : ""}
         </div>
         <div>剩余：{hands[idx].length} 张</div>
         <div style={styles.playedCards}>
@@ -290,28 +352,26 @@ export default function GameTable({ roomId, playerId, onExit }) {
   function renderMyHand() {
     return (
       <div style={styles.myHandArea}>
-        <div style={styles.myHandInner}>
-          {hands[myIdx].map((card, idx) => (
-            <div
-              key={idx}
-              style={{
-                border: selected.includes(idx) ? "2px solid #f00" : "2px solid transparent",
-                borderRadius: 8,
-                background: "#fff",
-              }}
-              onClick={phase === "playing" && currentPlayer === myIdx
-                ? () =>
-                    setSelected((prev) =>
-                      prev.includes(idx)
-                        ? prev.filter((i) => i !== idx)
-                        : [...prev, idx]
-                    )
-                : undefined}
-            >
-              <Card rank={card.rank} suit={card.suit} />
-            </div>
-          ))}
-        </div>
+        {hands[myIdx].map((card, idx) => (
+          <div
+            key={idx}
+            style={{
+              border: selected.includes(idx) ? "2px solid #f00" : "2px solid transparent",
+              borderRadius: 8,
+              background: "#fff",
+            }}
+            onClick={phase === "playing" && currentPlayer === myIdx
+              ? () =>
+                  setSelected((prev) =>
+                    prev.includes(idx)
+                      ? prev.filter((i) => i !== idx)
+                      : [...prev, idx]
+                  )
+              : undefined}
+          >
+            <Card rank={card.rank} suit={card.suit} />
+          </div>
+        ))}
       </div>
     );
   }
@@ -353,74 +413,121 @@ export default function GameTable({ roomId, playerId, onExit }) {
     return null;
   }
 
-  return (
-    <div style={styles.container}>
-      {/* 顶部栏 */}
-      <div style={styles.topBar}>
-        <div>
-          房间号：{roomId}&nbsp;
-          <button style={styles.smallBtn} onClick={onExit}>退出</button>
+  // 椭圆桌面和玩家布局
+  const tableContent = (
+    <div style={styles.tableWrap}>
+      <div style={styles.table}>
+        {/* 左侧玩家 */}
+        {renderOtherPlayer(leftIdx, "left")}
+        {/* 顶部玩家 */}
+        {renderOtherPlayer(rightIdx, "right")}
+        {/* 你 */}
+        <div style={styles.player("bottom", landlord === myIdx, currentPlayer === myIdx)}>
+          玩家{myIdx + 1}{landlord === myIdx ? "【地主】" : ""}(你)
         </div>
-        <div>
-          记分：
-          {scores.map((s, i) => (
-            <span key={i} style={{ marginRight: 8 }}>
-              玩家{i + 1}
-              {landlord === i ? "(地主)" : ""}
-              ：{s}
-            </span>
-          ))}
-        </div>
-        <div>
-          {phase === "grabbing" && (
-            <>
-              <b>抢地主阶段</b> 当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
-            </>
-          )}
-          {phase === "playing" && (
-            <>
-              <b>出牌阶段</b> 地主：玩家{landlord + 1} 底牌：
-              {bottom.map((c, i) => (
-                <Card key={i} rank={c.rank} suit={c.suit} style={styles.playedCardImg} />
-              ))}
-              当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
-            </>
-          )}
-          {phase === "end" && (
-            <>
-              <b>本局结束！{gameResult}</b>
-              <button style={styles.smallBtn} onClick={handleRestart}>再来一局</button>
-            </>
+        {/* 出牌区 */}
+        <div style={{
+          position: "absolute",
+          left: "50%",
+          top: "44%",
+          transform: "translate(-50%,-50%)",
+          zIndex: 3,
+          textAlign: "center",
+        }}>
+          {phase === "playing" && lastPlayed.length > 0 && (
+            <div>
+              <div style={{color:"#fc6",fontSize:"15px"}}>上家出牌</div>
+              <div style={styles.playedCards}>
+                {lastPlayed.map((c, i) => (
+                  <Card key={i} rank={c.rank} suit={c.suit} style={{width:24,height:36}} />
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        {phase === "grabbing" && (
-          <div>
-            抢地主记录：
-            {grabRecords.map((rec, i) => (
-              <span key={i}>
-                玩家{rec.player + 1}
-                {rec.action === "grab" ? "抢" : "不抢"}　
-              </span>
-            ))}
-          </div>
-        )}
-        {phase === "playing" && (
-          <div>
-            上家出的牌：
-            {lastPlayed.map((c, i) => (
+        {/* 底牌 */}
+        {phase !== "grabbing" && landlord != null && (
+          <div style={{
+            position: "absolute",
+            left: "50%",
+            top: "7%",
+            transform: "translateX(-50%)",
+            color:"#fff",
+            fontSize:"14px"
+          }}>
+            底牌：
+            {bottom.map((c, i) => (
               <Card key={i} rank={c.rank} suit={c.suit} style={styles.playedCardImg} />
             ))}
           </div>
         )}
+        {/* 我的手牌 */}
+        {renderMyHand()}
+        {/* 我的操作按钮 */}
+        {renderMyBtnArea()}
       </div>
-      {/* 左上角玩家 */}
-      {renderOtherPlayer(leftIdx, "left")}
-      {/* 右上角玩家 */}
-      {renderOtherPlayer(rightIdx, "right")}
-      {/* 底部自己 */}
-      {renderMyHand()}
-      {/* 底部按钮 */}
-      {renderMyBtnArea()}
+    </div>
+  );
+
+  // 顶部信息栏
+  const topBar = (
+    <div style={styles.topBar}>
+      <div>
+        房间号：{roomId}　
+        <button style={styles.smallBtn} onClick={onExit}>退出</button>
+      </div>
+      <div>
+        记分：
+        {scores.map((s, i) => (
+          <span key={i} style={{ marginRight: 8 }}>
+            玩家{i + 1}
+            {landlord === i ? "【地主】" : ""}
+            ：{s}
+          </span>
+        ))}
+      </div>
+      <div>
+        {phase === "grabbing" && (
+          <>
+            <b>抢地主阶段</b> 当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
+          </>
+        )}
+        {phase === "playing" && (
+          <>
+            <b>出牌阶段</b> 当前：玩家{currentPlayer + 1} 倒计时：{countdown}s
+          </>
+        )}
+        {phase === "end" && (
+          <>
+            <b>本局结束！{gameResult}</b>
+            <button style={styles.smallBtn} onClick={handleRestart}>再来一局</button>
+          </>
+        )}
+      </div>
+      {phase === "grabbing" && (
+        <div>
+          抢地主记录：
+          {grabRecords.map((rec, i) => (
+            <span key={i}>
+              玩家{rec.player + 1}
+              {rec.action === "grab" ? "抢" : "不抢"}　
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={styles.root}>
+      {topBar}
+      {rotate ? (
+        <div style={styles.rotate}>
+          {tableContent}
+        </div>
+      ) : (
+        tableContent
+      )}
     </div>
   );
 }
