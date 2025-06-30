@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Game3D, CardType, PlayerInfo } from "./components/Game3D";
+import { Game3D_Cartoon, CardType, PlayerInfo } from "./components/Game3D_Cartoon";
 
 export const App: React.FC = () => {
   // 示例：五张手牌
@@ -15,19 +15,32 @@ export const App: React.FC = () => {
     { suit: "spades", rank: "ace" },
     { suit: "hearts", rank: "king" }
   ]);
-  // 示例：三位玩家
+  // 三位玩家
   const players: PlayerInfo[] = [
-    { name: "你" },
-    { name: "玩家2" },
-    { name: "玩家3" }
+    { name: "你", avatarUrl: "/avatars/default.png" },
+    { name: "玩家2", avatarUrl: "/avatars/default.png" },
+    { name: "玩家3", avatarUrl: "/avatars/default.png" }
   ];
 
   return (
-    <div>
-      <h2 style={{textAlign: "center", color: "#fff", marginTop: 10}}>3D 斗地主</h2>
-      <Game3D myCards={myCards} outCards={outCards} players={players} />
-      <div style={{color:"#fff",textAlign:"center",marginTop:10,fontSize:16}}>
-        仅为3D桌面演示，可拓展动画和交互
+    <div style={{background:"#f2efe6",minHeight:"100vh",padding:"0",margin:"0"}}>
+      <h2 style={{
+        textAlign: "center", 
+        color: "#2d72fc", 
+        marginTop: 18, 
+        fontWeight: 900, 
+        letterSpacing: 3, 
+        fontSize: "2.1em",
+        textShadow: "0 2px 8px #fff"
+      }}>3D 斗地主</h2>
+      <Game3D_Cartoon myCards={myCards} outCards={outCards} players={players} />
+      <div style={{
+        color:"#888",
+        textAlign:"center",
+        marginTop:15,
+        fontSize:15
+      }}>
+        卡通风3D桌面 | 仅为美观演示，可拓展动画和交互
       </div>
     </div>
   );
